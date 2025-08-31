@@ -1,29 +1,9 @@
-import 'package:admin_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:admin_app/screens/login_screen.dart';
 
-void main() => runApp(const AdminApp());
-
-class AdminApp extends StatelessWidget {
-  const AdminApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const navy = Color(0xFF0E2C4A); // 진한 남색
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: navy),
-        textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 16)),
-      ),
-      home: const SplashLoginPage(),
-    );
-  }
-}
-
-class SplashLoginPage extends StatelessWidget {
-  const SplashLoginPage({super.key});
+class StartingScreen extends StatelessWidget {
+  const StartingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +24,7 @@ class SplashLoginPage extends StatelessWidget {
                   const SizedBox(height: 200),
                   Image.asset('assets/logo_admin.png', width: 320),
                   const SizedBox(height: 60),
+
                   // 서브타이틀
                   const Align(
                     alignment: Alignment.centerLeft,
@@ -59,7 +40,6 @@ class SplashLoginPage extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: 로그인 플로우 시작
                         Navigator.push(
                           context,
                           MaterialPageRoute(
