@@ -1,3 +1,4 @@
+import 'package:admin_app/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../widgets/tiny_badge.dart';
@@ -17,7 +18,15 @@ class ProfileTab extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            icon: const Icon(Icons.settings),
+          ),
         ],
       ),
       body: Column(
@@ -25,7 +34,7 @@ class ProfileTab extends StatelessWidget {
           const SizedBox(height: 24),
           CircleAvatar(
             radius: 48,
-            backgroundImage: const AssetImage('assets/profile_sample.jpg'),
+            backgroundImage: const AssetImage('assets/sample.jpeg'),
             backgroundColor: Colors.grey.shade300,
           ),
           const SizedBox(height: 12),
