@@ -1,23 +1,6 @@
 import 'package:admin_app/screens/main_screen.dart';
+import 'package:admin_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
-
-class ObscuredTextFieldSample extends StatelessWidget {
-  const ObscuredTextFieldSample({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 250,
-      child: TextField(
-        obscureText: true,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Password',
-        ),
-      ),
-    );
-  }
-}
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,12 +12,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _idCtrl = TextEditingController();
   final _pwCtrl = TextEditingController();
+  bool _loading = false;
+
+  late final AuthService _auth = AuthService(
+    'http://192.168.0.222:8080',
+  ); // ← 네 서버 베이스 URL
 
   @override
   void dispose() {
     _idCtrl.dispose();
     _pwCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _onLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _loading = true);
+    try {
+      await _auth.login(username: _idCtrl.text.trim(), password: _pwCtrl.text);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -100,18 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
 
                       ElevatedButton(
-                        onPressed: () {
-                          if (true) {
-                            // TODO: 로그인 API 호출 후 성공 시 다음 화면으로 이동
-                            // Navigator.pushReplacement(...);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MainScreen(),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: _loading ? null : _onLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: navy,
                           foregroundColor: Colors.white,
@@ -121,13 +120,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'Log in',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Log in',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -146,9 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(
-          color: Color.fromARGB(255, 143, 143, 143),
-        ), // 연초록 느낌
+        borderSide: const BorderSide(color: Color.fromARGB(255, 143, 143, 143)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),

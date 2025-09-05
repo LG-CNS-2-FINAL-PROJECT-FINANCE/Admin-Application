@@ -1,8 +1,8 @@
+import 'package:admin_app/features/management/management_tab.dart';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'home_tab.dart';
 import 'monitoring_tab.dart';
-import 'management_tab.dart';
 import 'profile_tab.dart';
 
 class MainScreen extends StatefulWidget {
