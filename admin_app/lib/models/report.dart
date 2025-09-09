@@ -1,19 +1,38 @@
-class Report {
-  final String projectName;
-  final String reporter;
-  final String owner;
-  final String status;
-  final String kind;
-  final String description;
-  final String imageAsset; // 프로젝트 이미지를 에셋으로 가정
+// lib/models/report.dart
+class ReportItem {
+  final int reportNo;
+  final String projectId;
+  final String title;
+  final String reportId;
+  final String reportNickname; // 신고자 닉네임
+  final String writerId; // 피신고자(작성자) ID
+  final String writerNickname; // 피신고자 닉네임
+  final String reportType; // 예: USER, PROJECT ...
+  final String status; // 예: SUBMITTED, APPROVED ...
 
-  const Report({
-    required this.projectName,
-    required this.reporter,
-    required this.owner,
+  const ReportItem({
+    required this.reportNo,
+    required this.projectId,
+    required this.title,
+    required this.reportId,
+    required this.reportNickname,
+    required this.writerId,
+    required this.writerNickname,
+    required this.reportType,
     required this.status,
-    required this.kind,
-    required this.description,
-    required this.imageAsset,
   });
+
+  factory ReportItem.fromJson(Map<String, dynamic> j) {
+    return ReportItem(
+      reportNo: (j['reportNo'] as num).toInt(),
+      projectId: j['projectId'] ?? '',
+      title: j['title'] ?? '',
+      reportId: j['reportId'] ?? '',
+      reportNickname: j['reportNickname'] ?? '',
+      writerId: j['writerId'] ?? '',
+      writerNickname: j['writerNickname'] ?? '',
+      reportType: j['reportType'] ?? '',
+      status: j['status'] ?? '',
+    );
+  }
 }

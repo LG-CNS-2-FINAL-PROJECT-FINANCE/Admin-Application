@@ -1,29 +1,25 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:admin_app/core/services/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  AuthService(this.baseUrl);
-
-  final String baseUrl; // 예: http://192.168.0.222:8080
+  final ApiService api;
   final _storage = const FlutterSecureStorage();
+
+  AuthService(this.api);
 
   Future<void> login({
     required String username,
     required String password,
   }) async {
-    final uri = Uri.parse('$baseUrl/api/user/auth/admin/login');
-
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'adminId': username, 'password': password}),
+    final res = await api.post(
+      '/api/user/auth/admin/login',
+      {'adminId': username, 'password': password},
+      withAuth: false, // 로그인은 토큰 필요 없음!
     );
 
     if (res.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(res.body);
-
-      // 백엔드 응답 키에 맞춰 수정하세요
+      final json = jsonDecode(res.body);
       final accessToken = json['accessToken'];
       final refreshToken = json['refreshToken'];
       final accessTokenExpiresAt = json['accessTokenExpiresAt'];
@@ -39,11 +35,11 @@ class AuthService {
       }
       await _storage.write(
         key: 'accessTokenExpiresAt',
-        value: accessTokenExpiresAt,
+        value: '$accessTokenExpiresAt',
       );
       await _storage.write(
         key: 'refreshTokenExpiresAt',
-        value: refreshTokenExpiresAt,
+        value: '$refreshTokenExpiresAt',
       );
     } else if (res.statusCode == 401) {
       throw Exception('아이디 또는 비밀번호가 올바르지 않습니다.');
@@ -53,6 +49,7 @@ class AuthService {
   }
 
   Future<String?> get accessToken => _storage.read(key: 'accessToken');
+
   Future<void> logout() async {
     await _storage.delete(key: 'accessToken');
     await _storage.delete(key: 'refreshToken');
