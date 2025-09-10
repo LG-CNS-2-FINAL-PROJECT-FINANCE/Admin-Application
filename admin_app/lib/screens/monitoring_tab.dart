@@ -17,7 +17,7 @@ class _MonitoringTabState extends State<MonitoringTab> {
   final Uri grafanaUrl = Uri.parse(
     // 예) 전체 목록: /dashboards
     // 특정 대시보드(추천): /d/<uid>/<slug>?orgId=1&kiosk&refresh=30s&theme=light
-    'http://13.124.228.130:3000/dashboards',
+    'http://43.203.233.216:3000/dashboards',
   );
 
   @override

@@ -40,6 +40,9 @@ dependencies:
   webview_flutter: ^4.8.0
   webview_flutter_android: ^3.16.0
   webview_flutter_wkwebview: ^3.13.0
+  firebase_core: ^3.4.0
+  firebase_messaging: ^15.0.3
+  flutter_local_notifications: ^17.2.2
 
 dev_dependencies:
   flutter_test:
