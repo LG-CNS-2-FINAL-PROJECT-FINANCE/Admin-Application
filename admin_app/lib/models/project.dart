@@ -1,35 +1,54 @@
-class ProjectFile {
-  final String name;
-  final String? url; // 다운로드 주소가 있다면 사용
-  const ProjectFile({required this.name, this.url});
-}
+class ProjectItem {
+  final String projectId;
+  final String userSeq;
+  final String nickname;
+  final String title;
+  final DateTime startDate;
+  final DateTime endDate;
+  final int deadline;
+  final int amount;
+  final int percent;
+  final List<String> images;
+  final int viewCount;
+  final String projectStatus;
+  final String projectVisibility;
+  final int? tradePrice;
 
-class Project {
-  final String name; // 프로젝트 이름
-  final DateTime startAt; // 시작일
-  final DateTime endAt; // 종료일
-  final String status; // 예: APPROVED
-  final String kind; // 예: CREATE
-  final String summary; // 프로젝트 설명
-  final String projectId; // 프로젝트 ID
-  final String userId; // 작성자 ID
-  final int goal; // 목표 금액
-  final int minimum; // 최소 금액
-  final String? imageAsset; // 커버 이미지 에셋 경로 (없으면 null)
-  final List<ProjectFile> files;
-
-  const Project({
-    required this.name,
-    required this.startAt,
-    required this.endAt,
-    required this.status,
-    required this.kind,
-    required this.summary,
+  ProjectItem({
     required this.projectId,
-    required this.userId,
-    required this.goal,
-    required this.minimum,
-    this.imageAsset,
-    required this.files,
+    required this.userSeq,
+    required this.nickname,
+    required this.title,
+    required this.startDate,
+    required this.endDate,
+    required this.deadline,
+    required this.amount,
+    required this.percent,
+    required this.images,
+    required this.viewCount,
+    required this.projectStatus,
+    required this.projectVisibility,
+    this.tradePrice,
   });
+
+  factory ProjectItem.fromJson(Map<String, dynamic> json) {
+    return ProjectItem(
+      projectId: json['projectId'] as String,
+      userSeq: json['userSeq'] as String,
+      nickname: json['nickname'] as String? ?? '-',
+      title: json['title'] as String,
+      startDate: DateTime.parse(json['startDate'] as String),
+      endDate: DateTime.parse(json['endDate'] as String),
+      deadline: (json['deadline'] as num).toInt(), // 🔑 num → int
+      amount: (json['amount'] as num).toInt(), // 🔑 num → int
+      percent: (json['percent'] as num).toInt(), // 🔑 num → int
+      images: (json['image'] as List<dynamic>).cast<String>(),
+      viewCount: (json['viewCount'] as num).toInt(), // 🔑 num → int
+      projectStatus: json['projectStatus'] as String,
+      projectVisibility: json['projectVisibility'] as String,
+      tradePrice: json['tradePrice'] == null
+          ? null
+          : (json['tradePrice'] as num).toInt(),
+    );
+  }
 }

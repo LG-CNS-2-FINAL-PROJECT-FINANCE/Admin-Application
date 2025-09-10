@@ -1,10 +1,38 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../widgets/app_section_title.dart';
-import '../widgets/stat_card.dart';
+import '../widgets/kpi_widgets.dart';
+import '../data/home_summary.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  late final MetricsApi api;
+  late Future<HomeSummary> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    // ↓ 네 MetricsApi 구현에 맞게 하나만 선택
+    // 1) Uri.parse 방식이면:
+    api = MetricsApi('http://43.203.233.216:9090');
+
+    // 2) Uri.http(hostWithPort, ...) 방식이면:
+    // api = MetricsApi('13.124.228.130:9090');
+
+    _future = api.fetchSummary();
+  }
+
+  void _reload() {
+    setState(() {
+      _future = api.fetchSummary();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,114 +40,142 @@ class HomeTab extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: navy,
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
         title: const Text(
           'Home',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _reload),
+        ],
       ),
-      backgroundColor: pageBg,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const AppSectionTitle('System Status'),
-            const SizedBox(height: 8),
+      body: FutureBuilder<HomeSummary>(
+        future: _future,
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError) {
+            return _ErrorView(onRetry: _reload, message: '${snap.error}');
+          }
+          final s = snap.data;
+          if (!snap.hasData || s == null) {
+            return _ErrorView(onRetry: _reload, message: 'No data');
+          }
 
-            // 카드 1: 좌우 두 블록 사이 세로 구분선
-            StatCard(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Expanded(
-                    child: _GaugePlaceholder(
-                      title: 'DB indexing speed',
-                      valueText: '197 EPS',
-                      status: 'OK',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // VerticalDivider는 레이아웃 제약에 따라 높이가 0이 될 수 있어 Container로 대체
-                  Container(width: 1, height: 88, color: Colors.black12),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: _GaugePlaceholder(
-                      title: 'Sys Load (5m avg)',
-                      valueText: '16.3%',
-                      status: '2.8 days',
-                    ),
-                  ),
-                ],
-              ),
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppSectionTitle('System Status'),
+                const SizedBox(height: 8),
+                LayoutBuilder(
+                  builder: (context, cs) {
+                    const gap = 12.0;
+                    final w = (cs.maxWidth - gap) / 2;
+                    return Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: [
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'Pods',
+                            value: s.pods.toStringAsFixed(0), // 정수 개수
+                            icon: Icons.view_module,
+                          ),
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'Pods PCT',
+                            value: '${s.podRequestPct.toStringAsFixed(1)}%',
+                            statusColor: s.podRequestPct < 70
+                                ? Colors.green
+                                : (s.podRequestPct < 85
+                                      ? Colors.orange
+                                      : Colors.red),
+                            icon: Icons.view_module,
+                          ),
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'RPS',
+                            value: s.rps.toStringAsFixed(1),
+                            icon: Icons.trending_up,
+                          ),
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'CPU',
+                            value: '${s.cpuPct.toStringAsFixed(1)}%',
+                            statusColor: s.cpuPct < 70
+                                ? Colors.green
+                                : (s.cpuPct < 85 ? Colors.orange : Colors.red),
+                            icon: Icons.memory,
+                          ),
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'Memory',
+                            value: '${s.memPct.toStringAsFixed(1)}%',
+                            statusColor: s.memPct < 70
+                                ? Colors.green
+                                : (s.memPct < 85 ? Colors.orange : Colors.red),
+                            icon: Icons.storage,
+                          ),
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: KpiTile(
+                            label: 'Nodes',
+                            value: s.nodeCount.toStringAsFixed(0), // 정수
+                            icon: Icons.dns,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
-
-            const SizedBox(height: 20),
-            const AppSectionTitle('System Reports'),
-            const SizedBox(height: 8),
-            const StatCard(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('현재 시스템은 정상적으로 동작하고 있습니다.'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class _GaugePlaceholder extends StatelessWidget {
-  final String title;
-  final String valueText;
-  final String status;
-  const _GaugePlaceholder({
-    required this.title,
-    required this.valueText,
-    required this.status,
-  });
+class _ErrorView extends StatelessWidget {
+  final VoidCallback onRetry;
+  final String message;
+  const _ErrorView({required this.onRetry, required this.message});
 
   @override
   Widget build(BuildContext context) {
-    // Colors.green.shade400 같은 shade 접근은 const가 아니므로, 위젯 자체는 const 생성자여도 OK
-    final ringColor = Colors.green.shade400;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        const SizedBox(height: 8),
-        Row(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: ringColor, width: 6),
-              ),
+            const Icon(Icons.wifi_off, size: 40, color: Colors.black45),
+            const SizedBox(height: 10),
+            const Text('요약 정보를 불러오지 못했어요.'),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  valueText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(status, style: const TextStyle(color: Colors.black54)),
-              ],
-            ),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: onRetry, child: const Text('다시 시도')),
           ],
         ),
-      ],
+      ),
     );
   }
 }

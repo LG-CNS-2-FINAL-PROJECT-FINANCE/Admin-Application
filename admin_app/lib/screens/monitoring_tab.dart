@@ -1,10 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../theme/colors.dart';
-import '../widgets/app_section_title.dart';
-import '../widgets/stat_card.dart';
 
-class MonitoringTab extends StatelessWidget {
+class MonitoringTab extends StatefulWidget {
   const MonitoringTab({super.key});
+
+  @override
+  State<MonitoringTab> createState() => _MonitoringTabState();
+}
+
+class _MonitoringTabState extends State<MonitoringTab> {
+  late final WebViewController _controller;
+  bool _loading = true;
+
+  // Grafana 대시보드 URL (원한다면 특정 대시보드/kiosk 모드로)
+  final Uri grafanaUrl = Uri.parse(
+    // 예) 전체 목록: /dashboards
+    // 특정 대시보드(추천): /d/<uid>/<slug>?orgId=1&kiosk&refresh=30s&theme=light
+    'http://43.203.233.216:3000/dashboards',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(pageBg)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => setState(() => _loading = true),
+          onPageFinished: (_) => setState(() => _loading = false),
+          onWebResourceError: (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('WebView 오류: ${e.errorCode}')),
+            );
+          },
+        ),
+      )
+      ..loadRequest(grafanaUrl);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,91 +52,19 @@ class MonitoringTab extends StatelessWidget {
           'Monitoring',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
-      ),
-      backgroundColor: pageBg,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const AppSectionTitle('CPU Usage'),
-            const SizedBox(height: 8),
-            const StatCard(child: _ChartPlaceholder(title: 'CPU usage')),
-
-            const SizedBox(height: 20),
-            const AppSectionTitle('Events Disk Queue Size'),
-            const SizedBox(height: 8),
-            const StatCard(
-              child: _ChartPlaceholder(title: 'Events disk queue size'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ChartPlaceholder extends StatelessWidget {
-  final String title;
-  const _ChartPlaceholder({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        Container(
-          height: 160,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.black12),
-            image: const DecorationImage(
-              // 임시 그리드 느낌
-              image: AssetImage('assets/sample.jpeg'),
-              fit: BoxFit.cover,
-              opacity: 0.15,
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _controller.reload(),
           ),
-          alignment: Alignment.center,
-          child: const Text('Chart Placeholder'),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            _Legend(color: Colors.green, label: 'core 0'),
-            SizedBox(width: 8),
-            _Legend(color: Colors.orange, label: 'core 1'),
-            SizedBox(width: 8),
-            _Legend(color: Colors.blue, label: 'core 2'),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Legend extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _Legend({required this.color, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-      ],
+        ],
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (_loading) const Center(child: CircularProgressIndicator()),
+        ],
+      ),
     );
   }
 }

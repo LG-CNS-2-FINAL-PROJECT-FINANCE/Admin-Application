@@ -1,5 +1,7 @@
+import 'package:admin_app/core/services/api_service.dart';
 import 'package:admin_app/screens/main_screen.dart';
 import 'package:admin_app/services/auth_service.dart';
+import 'package:admin_app/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,9 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pwCtrl = TextEditingController();
   bool _loading = false;
 
-  late final AuthService _auth = AuthService(
-    'http://192.168.0.222:8080',
-  ); // ← 네 서버 베이스 URL
+  late final AuthService _auth = AuthService(ApiService(AppConfig.baseUrl));
 
   @override
   void dispose() {

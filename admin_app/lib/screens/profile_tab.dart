@@ -39,7 +39,7 @@ class ProfileTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Admini',
+            'Admin',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           TextButton(

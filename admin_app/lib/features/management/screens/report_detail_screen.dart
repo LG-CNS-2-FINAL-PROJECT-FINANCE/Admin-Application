@@ -1,9 +1,23 @@
-import 'package:admin_app/models/report.dart';
+// lib/features/management/screens/report_detail_screen.dart
 import 'package:flutter/material.dart';
+import 'package:admin_app/models/report.dart';
 
 class ReportDetailScreen extends StatelessWidget {
-  final Report report;
+  final ReportItem report;
   const ReportDetailScreen({super.key, required this.report});
+
+  Color _statusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'SUBMITTED':
+        return Colors.orange;
+      case 'APPROVED':
+        return Colors.green;
+      case 'REJECTED':
+        return Colors.red;
+      default:
+        return Colors.blueGrey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,87 +30,113 @@ class ReportDetailScreen extends StatelessWidget {
         title: const Text('Report Detail'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상단 이미지
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: report.imageAsset != null
-                  ? Image.asset(
-                      report.imageAsset,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: double.infinity,
-                      height: 200,
-                      color: Colors.grey.shade300,
-                    ),
+            // 상단 썸네일(이미지 없음 -> 아이콘)
+            Container(
+              height: 200,
+              width: double.infinity,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.report_gmailerrorred,
+                color: Colors.red.shade400,
+                size: 56,
+              ),
             ),
             const SizedBox(height: 24),
 
-            // Project Name
-            _Label('Project Name'),
-            _ReadonlyField(report.projectName),
-            const SizedBox(height: 16),
+            _Label('Title'),
+            _ReadonlyField(report.title),
+            const SizedBox(height: 12),
 
-            // Reporter / Owner
             Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Label('Reporter'),
-                      _ReadonlyField(report.reporter),
+                      _Label('Report Type'),
+                      _ReadonlyField(report.reportType), // USER / PROJECT ...
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [_Label('Owner'), _ReadonlyField(report.owner)],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Status / Kinds
-            Row(
-              children: [
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [_Label('Status'), _ReadonlyField(report.status)],
                   ),
                 ),
-                const SizedBox(width: 16),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [_Label('Kinds'), _ReadonlyField(report.kind)],
+                    children: [
+                      _Label('Reporter (Nickname)'),
+                      _ReadonlyField(report.reportNickname),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Label('Target Writer (Nickname)'),
+                      _ReadonlyField(report.writerNickname),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // Description
-            _Label('Description'),
-            _ReadonlyField(report.description, minLines: 3),
+            _Label('Project ID'),
+            _ReadonlyField(report.projectId),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Label('Report ID'),
+                      _ReadonlyField(report.reportId),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Label('Report No'),
+                      _ReadonlyField('${report.reportNo}'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
 
-            // 숨김처리 버튼 (가로 전체)
+            // 하단 액션 (예시 — API 붙이기 전)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // 숨김처리 로직
+                  // TODO: 숨김 처리 API
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: navy,
@@ -110,18 +150,16 @@ class ReportDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
-            // 승인 / 보류 버튼 나란히
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // 승인 로직
+                      // TODO: 승인 API
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundColor: Colors.black87,
+                      backgroundColor: _statusColor('APPROVED').withOpacity(.9),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -130,15 +168,15 @@ class ReportDetailScreen extends StatelessWidget {
                     child: const Text('승인'),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // 보류 로직
+                      // TODO: 보류/거절 API
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundColor: Colors.black87,
+                      backgroundColor: Colors.grey.shade400,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -149,6 +187,7 @@ class ReportDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -156,14 +195,12 @@ class ReportDetailScreen extends StatelessWidget {
   }
 }
 
-// 공통 위젯들
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
   @override
-  Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontWeight: FontWeight.w700));
-  }
+  Widget build(BuildContext context) =>
+      Text(text, style: const TextStyle(fontWeight: FontWeight.w700));
 }
 
 class _ReadonlyField extends StatelessWidget {
@@ -186,7 +223,7 @@ class _ReadonlyField extends StatelessWidget {
       readOnly: true,
       obscureText: obscure,
       keyboardType: keyboardType,
-      minLines: minLines,
+      minLines: minLines ?? 1,
       maxLines: minLines ?? 1,
       decoration: InputDecoration(
         isDense: true,
