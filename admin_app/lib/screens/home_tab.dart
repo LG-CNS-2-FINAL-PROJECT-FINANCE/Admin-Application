@@ -40,6 +40,8 @@ class _HomeTabState extends State<HomeTab> {
       appBar: AppBar(
         backgroundColor: navy,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+
         title: const Text(
           'Home',
           style: TextStyle(fontWeight: FontWeight.w800),
